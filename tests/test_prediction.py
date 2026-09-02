@@ -35,6 +35,28 @@ class TelemetryAndPredictionTests(unittest.TestCase):
         self.assertEqual(by_node["edge"].wave_depth, 1)
         self.assertGreater(by_node["edge"].predicted_failure_probability, 0.0)
 
+    def test_parses_generic_observability_payload(self) -> None:
+        payload = {
+            "result": {
+                "events": [
+                    {"ts": 1, "service": "api", "metrics": {"errors": 0.3, "latency": 210, "sat": 0.5}},
+                    {"ts": 2, "service": "api", "metrics": {"errors": 0.6, "latency": 240, "sat": 0.6}},
+                ]
+            }
+        }
+        field_map = {
+            "timestamp": "ts",
+            "node": "service",
+            "error_rate": "metrics.errors",
+            "latency_ms": "metrics.latency",
+            "saturation": "metrics.sat",
+        }
+        fetched = TelemetryFetcher()._parse_payload(payload, field_map=field_map, samples_path="result.events")
+        self.assertEqual(len(fetched), 2)
+        self.assertEqual(fetched[-1].node, "api")
+        self.assertAlmostEqual(fetched[-1].error_rate, 0.6)
+        self.assertAlmostEqual(fetched[-1].latency_ms, 240.0)
+
 
 if __name__ == "__main__":
     unittest.main()

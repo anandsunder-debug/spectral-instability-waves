@@ -45,3 +45,28 @@ python -m spectral_instability_waves \
 ```
 
 The command returns JSON results ranked by predicted failure probability.
+
+## Plug in any observability tool
+
+If your telemetry uses different field names or nests samples, provide a field-map file and samples path.
+
+`field-map.json`:
+
+```json
+{
+  "timestamp": "ts",
+  "node": "service",
+  "error_rate": "metrics.errors",
+  "latency_ms": "metrics.latency",
+  "saturation": "metrics.sat"
+}
+```
+
+Then run:
+
+```bash
+python -m spectral_instability_waves \
+  --source /absolute/path/to/obs-output.json \
+  --field-map /absolute/path/to/field-map.json \
+  --samples-path result.events
+```
