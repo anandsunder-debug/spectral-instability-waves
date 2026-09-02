@@ -14,6 +14,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--source", required=True, help="Telemetry JSON file path or HTTP(S) URL.")
     parser.add_argument("--graph", help="Path to JSON adjacency graph: {'node': ['neighbor']}.")
+    parser.add_argument(
+        "--field-map",
+        help="Path to JSON map of canonical fields to source fields, e.g. {'timestamp':'ts','node':'service'}.",
+    )
+    parser.add_argument(
+        "--samples-path",
+        help="Dot path to samples array in payload, e.g. 'data.points'.",
+    )
     parser.add_argument("--steps", type=int, default=2, help="Wave propagation steps.")
     return parser
 
@@ -24,7 +32,11 @@ def main() -> None:
     if args.graph:
         graph = json.loads(Path(args.graph).read_text(encoding="utf-8"))
 
-    points = TelemetryFetcher().fetch(args.source)
+    field_map = None
+    if args.field_map:
+        field_map = json.loads(Path(args.field_map).read_text(encoding="utf-8"))
+
+    points = TelemetryFetcher().fetch(args.source, field_map=field_map, samples_path=args.samples_path)
     predictor = FailureWavePredictor(graph=graph)
     results = predictor.predict(points, propagation_steps=args.steps)
 
